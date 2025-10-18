@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./hospital-frontend
+      dockerfile: dockerfile
+    ports:
+      - "3000:5173"
+    depends_on:
+      - backend
+    env_file:
+      - ./hospital-frontend/.env
+    environment:
+      # Frontend API Configuration
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://backend:8081}
+      - VITE_APP_NAME=${VITE_APP_NAME:-Hospital Management System}
+    networks:
+      - hospital-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./hospital-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:mysql://host.docker.internal:3306/newdb}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-root}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-Adnan2k5}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=${SPRING_DATASOURCE_DRIVER_CLASS_NAME:-com.mysql.cj.jdbc.Driver}
+
+      # JPA Configuration
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      - SPRING_JPA_SHOW_SQL=${SPRING_JPA_SHOW_SQL:-true}
+      - SPRING_JPA_DATABASE_PLATFORM=${SPRING_JPA_DATABASE_PLATFORM:-org.hibernate.dialect.MySQLDialect}
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:-org.hibernate.dialect.MySQLDialect}
+
+      # Application Configuration
+      - SPRING_APPLICATION_NAME=${SPRING_APPLICATION_NAME:-hospital}
+      - SERVER_PORT=${SERVER_PORT:-8081}
+
+      # Application Profile
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+
+      # JVM Options
+      - JAVA_OPTS=${JAVA_OPTS:--Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0}
+    networks:
+      - hospital-network
+    restart: unless-stopped
+
+networks:
+  hospital-network:
+    driver: bridge
+    name: hospital-network

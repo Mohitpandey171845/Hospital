@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+# Install dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Clean install and rebuild esbuild to avoid version conflicts
+RUN npm ci --only=production=false && npm rebuild esbuild
+
+# Copy source code
+COPY . .
+
+# Expose port
+EXPOSE 5173
+
+# Start without --poll flag (configure polling in vite.config.js instead)
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
